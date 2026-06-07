@@ -1,0 +1,8 @@
+{
+  "name": "lwcs-archive",
+  "version": "1.0.0",
+  "description": "LWCS cold archive storage backend for SillyTavern.",
+  "type": "module",
+  "main": "index.mjs",
+  "private": true
+}
