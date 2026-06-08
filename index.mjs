@@ -83,6 +83,10 @@ function 取用户标识(请求) {
     return 规范化路径段(请求.user?.profile?.handle || 'default-user', 'default-user');
 }
 
+function 取默认归档根目录(请求) {
+    return 路径模块.resolve(取用户根目录(请求), '..', '..', '..', 默认归档目录名);
+}
+
 function 计算归档根目录(请求, 配置 = 读配置(请求)) {
     const 自定义根目录 = 文本(配置.customRoot).trim();
     if (自定义根目录) {
@@ -93,7 +97,7 @@ function 计算归档根目录(请求, 配置 = 读配置(请求)) {
         };
     }
     return {
-        root: 路径模块.resolve(取用户根目录(请求), 默认归档目录名),
+        root: 路径模块.resolve(取默认归档根目录(请求), 取用户标识(请求)),
         config: 配置,
         custom: false,
     };
@@ -144,9 +148,17 @@ function 发送错误(响应, 错误, 兜底 = 'archive_error') {
 
 function 检查可写目录(目录路径) {
     确保目录(目录路径);
+    for (const 文件名 of 文件系统.readdirSync(目录路径)) {
+        if (文件名.startsWith('.write-test-') && 文件名.endsWith('.tmp')) {
+            文件系统.rmSync(路径模块.join(目录路径, 文件名), { force: true });
+        }
+    }
     const 测试路径 = 路径模块.join(目录路径, `.write-test-${process.pid}-${Date.now()}.tmp`);
-    文件系统.writeFileSync(测试路径, 'ok', 'utf8');
-    文件系统.unlinkSync(测试路径);
+    try {
+        文件系统.writeFileSync(测试路径, 'ok', 'utf8');
+    } finally {
+        文件系统.rmSync(测试路径, { force: true });
+    }
 }
 
 export async function init(路由器) {
